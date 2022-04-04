@@ -92,11 +92,42 @@ statespending <- enframe(statespending, name = "year") %>%
   unnest(cols = "value") %>% 
   clean_names() 
 
+educationcosts <- read_excel("../data/education_costs.xls") %>% 
+  clean_names() %>%
+ mutate("year" = str_sub(year, 1,4))
 
+studentdebt <- read_excel("../data/totaldebtbalance.xlsx") %>%
+  select(c("Year", "Student Loan"))%>%
+  clean_names() %>%
+  filter(grepl("Q4", year))%>%
+  mutate("year" = str_sub(year, 1,2)) %>%
+  mutate("year" = str_glue("20{year}"))%>%
+    mutate("year" = as.numeric(year)) %>%
+   mutate("studentloan_adj" = case_when (
+    year == 2004 ~ student_loan * 1.35,
+     year == 2005 ~ student_loan * 1.31,
+     year == 2006 ~ student_loan * 1.27,
+     year == 2007 ~ student_loan * 1.22,
+     year == 2008 ~ student_loan * 1.22,
+     year == 2009 ~ student_loan * 1.19,
+     year == 2010 ~ student_loan * 1.17,
+     year == 2011 ~ student_loan * 1.14,
+     year == 2012 ~ student_loan * 1.12,
+     year == 2013 ~ student_loan * 1.1,
+     year == 2014 ~ student_loan * 1.09,
+     year == 2015 ~ student_loan * 1.09,
+     year == 2016 ~ student_loan * 1.06,
+     year == 2017 ~ student_loan * 1.04,
+     year == 2018 ~ student_loan * 1.02,
+     year == 2019 ~ student_loan * 1))%>%
+  filter(!is.na(studentloan_adj))%>%
+  mutate("studentloan_adj" = 1000*studentloan_adj)
 
 # make codebooks
 #  makeCodebook(debtlevels, vol = "", reportTitle = NULL, file = NULL)
 # makeCodebook(statespending, vol = "", reportTitle = NULL, file = NULL)
+# makeCodebook(educationcosts, vol = "", reportTitle = NULL, file = NULL)
+# makeCodebook(studentdebt, vol = "", reportTitle = NULL, file = NULL)
 
 ```
 ## Data analysis plan

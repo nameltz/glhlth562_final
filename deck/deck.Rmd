@@ -347,12 +347,99 @@ educationcosts %>%
 --
 
 ```{r}
+debtspending %>%
+  group_by(year, state) %>%
+  summarise(avg_spend = mean(highered_adj), na.rm = TRUE) %>%
+  ungroup() %>%
+  group_by(year) %>%
+  summarise(avg_percap_spend = mean(avg_spend), na.rm = TRUE)%>%
+  ungroup()%>%
+  mutate(year = as.numeric(year))%>%
+ggplot(aes(x = year, 
+            y = avg_percap_spend))+
+  geom_line()+
+  scale_y_continuous(labels = scales::dollar_format())+
+  theme_minimal()+
+    theme_xaringan(background_color = "#FFFFFF") +
+  theme(plot.title.position = "plot",
+        plot.title = element_text(size=20,
+                                  face="bold"),
+        plot.subtitle = element_text(size=15),
+        plot.caption = element_text(size=10))+
+  labs(title = "Average State Spending on Higher Education Per Capita",
+       subtitle = "$2019",
+       caption = "Data: U.S. Census Bureau, Annual Survey of State and Local Government Finances\n Compiled by the Urban-Brookings Tax Policy Center",
+       x = "",
+       y = "")
+  
+```
+---
+
+# Breaking it down by state
+
+
+
+```{r}
+debtspending %>%
+  filter(year == 2004) %>%
+  ggplot(aes(x = long, y = lat, group = group))+
+  geom_polygon(aes(fill = studentloan_adj), color = "black")+
+  scale_fill_gradient(low = "white", 
+                        high = "red",
+                        name = "Avg. student loans per capita, 2004",
+                        label = scales::dollar_format()) + 
+  theme(legend.position = "right",
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        rect = element_blank(),
+        plot.title.position = "plot",
+        plot.title = element_text(size=20,
+                                  face="bold"),
+        plot.caption = element_text(size=10))+
+  labs(title = "Average Student Loans Per Capita, 2004",
+       subtitle = "$2019",
+       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit")
+ 
+
+```
+
+---
+
+```{r}
+debtspending %>%
+  filter(year == 2019) %>%
+  ggplot(aes(x = long, y = lat, group = group))+
+  geom_polygon(aes(fill = studentloan_adj), color = "black")+
+  scale_fill_gradient(low = "white", 
+                        high = "red",
+                        name = "Avg. student loans per capita, 2019",
+                        label = scales::dollar_format()) + 
+  theme(legend.position = "right",
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        rect = element_blank(),
+        plot.title.position = "plot",
+        plot.title = element_text(size=20,
+                                  face="bold"),
+        plot.caption = element_text(size=10))+
+  labs(title = "Average Student Loans Per Capita, 2019",
+       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit")
 
 ```
 
 
----
 
+
+
+
+
+---
 ## Colors
 
 .left-column[
@@ -423,9 +510,8 @@ class: inverse center middle
 
 --
 
-```
+
 class: inverse center middle
-```
 
 ---
 layout: true
@@ -444,9 +530,7 @@ layout: true
 
 ### Code Blocks
 
-#### R Code
-
-```{r eval=FALSE}
+#### R Code```{r eval=FALSE}
 ggplot(gapminder) +
   aes(x = gdpPercap, y = lifeExp, size = pop, color = country) +
   geom_point() +
