@@ -1,0 +1,235 @@
+---
+title: "Final Project Proposal"
+subtitle: "GLHLTH 562"
+author: "Natalie Meltzer"
+date: "2/25/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(dataReporter)
+library(patchwork)
+
+
+
+```
+
+## Introduction
+
+In this project, I will examine the relationship between household debt and state spending on primary, secondary, and higher education; health and hospitals; and public welfare from 2004-2019. 
+
+#### Background 
+
+The long-term trend of rising household debt—including mortgage, student loan, auto loan, and credit card debt—began in the 1950s and has accelerated over the last fifty years. From 1949 to 1997, household debt tripled from `$134.8 billion` to `$2.1 trillion` — a more than fifteen-fold increase in less than fifty years (all current dollars). 
+
+But this was just the beginning. Household debt really took off in the twenty-first century, reaching a historic high of $14.96 trillion in August 2021 . This leaves the average American more than 110 times deeper in debt than in 1949.  
+
+How did we get here? The conventional understanding is that debt is a result of irresponsible personal decisions: people living beyond their means to “keep up with the Joneses” or taking out ever-increasing amounts of debt to fuel a gambling addition.  
+
+The focus on individual responsibility obscures the structural forces driving individuals to take out debt in the first place. Many argue that rising consumer debt cannot be understood outside the context of wage stagnation, rising inequality, and the dismantling of the social safety net. 
+
+Today’s average hourly wage has about the same purchasing power it did in 1978. And this masks that the wage gains during this period were concentrated among the highest earners: inflation-adjusted annual wages for the top 1% of earners grew by 160%, compared to 63% at the 95th percentile, 15% at the 50th percentile, and just 3% at the 10th percentile of earners. 
+
+At the same time, the state largely withdrew from the New Deal-era investments in healthcare, public education, and social services, tightening eligibility and reducing benefits for programs including unemployment insurance, Temporary Assistance for Needy Families, food stamps and Medicaid . 
+
+Without fair compensation and robust welfare programs, Americans are increasingly driven to rely on debt to pay for necessary goods and services (see Williams 2005; Konczal and Abernathy 2015; Lapavitsas 2011; Palley 2007; Draut 2005; 2007). In many instances, debt has become the social safety net: nearly one in five Americans have medical debt, one in eight have student debt, and four in ten Americans would need to go into debt to pay for $400 in unexpected expenses such as repairing a car or a broken appliance (Census Bureau 2021; Kluender et al. 2021; Yilla 2020; Federal Reserve 2021). While there are cases of financial illiteracy and irresponsible consumption, on a structural level we should not see debtors as extravagant spenders but rather underpaid and unsupported workers (Hyman 2012a, 282).
+
+#### Research Question
+
+What is the relationship between per-capita household debt and investments in government services at the state level from 2004-2019? 
+
+To answer my question, I will analyze state-level household debt statistics from the Federal Reserve Bank of New York and Census Bureau state and local government expenditure data compiled by the Urban-Brookings Tax Policy Center.  
+The data on debt comes from the New York Fed Consumer Credit Panel, a  longitudinal database with detailed information on consumer debt and credit. The panel is constructed from a nationally representative random sample of Equifax credit report data to track individuals’ and households’ access to and use of credit on a quarterly basis. It includes the Q4 `per-capita debt` and `delinquency rates` by `state` for `auto`, `credit card`, `mortgage`, and `student loan` debt.
+[link to data](https://www.newyorkfed.org/microeconomics/hhdc/background.html)
+
+The data on state and local government expenditures comes from the Census Bureau's Annual Survey of State and Local Government Finances. Per-capita spending is calculated using American Community Survey 1-year population estimates for each state. The data includes spending on `Elementary and Secondary Education`,	`Higher Education`,	`Health and Hospitals`, `Public Welfare`,	`Highways`,	`Police`.  Public welfare expenditures include cash assistance through Temporary Assistance for Needy Families (TANF), Supplemental Security Income, and other payments made directly to individuals as well as payments to physicians and other service providers under programs like Medicaid. There is some Medicaid spending counted as hospital expenditures as well.
+[link to data](https://www.taxpolicycenter.org/statistics/state-and-local-general-expenditures-capita)
+
+
+##Data
+
+```{r data}
+
+# read in data with multiple sheets 
+# code from https://stackoverflow.com/questions/49359587/import-excel-workbook-with-multiple-sheets
+
+path <- "../data/household_debt.xlsx"
+sheetnames <- excel_sheets(path)
+debtlevels <- lapply(excel_sheets(path), read_excel, path = path)
+names(debtlevels) <- sheetnames
+
+
+path2 <- "../data/state_spending.xls"
+sheetnames <- excel_sheets(path2)
+statespending <- lapply(excel_sheets(path2), read_excel, path = path2)
+names(statespending) <- sheetnames
+
+# clean data
+## convert lists to tibble, drop unnecessary columns, filter unnecessary rows
+
+debtlevels <- enframe(debtlevels) %>% 
+  select(name, value) %>%
+  unnest_wider(value) %>%
+  select(!ends_with(c("_2003", "_2020","_2021"))) %>%
+  rename("debt_type" = name)
+
+debtlevels  <- debtlevels %>% unnest(cols = c(state:Q4_2019))%>%
+  filter(debt_type != "total") %>%
+  filter(state != "allUS") %>%
+   pivot_longer(!debt_type:state, names_to = "year", values_to = "amount") %>%
+  pivot_wider(names_from = debt_type, values_from = amount)%>%
+   mutate(year = str_remove(year, "Q4_"))
+  
+
+statespending <- enframe(statespending, name = "year") %>%
+  select(year, value) %>%
+  unnest_longer(value) %>%
+  unnest(cols = "value") %>% 
+  clean_names() 
+
+
+
+# make codebooks
+#  makeCodebook(debtlevels, vol = "", reportTitle = NULL, file = NULL)
+# makeCodebook(statespending, vol = "", reportTitle = NULL, file = NULL)
+
+```
+## Data analysis plan
+
+I will join subsets of my data by state and year to analyze the relationship between household debts of various types and state spending on public goods. 
+
+My hypothesis is that lower state level spending results in higher amounts of household debt over time. I will compare across states, types of debt, and categories of expenditures to understand this relationship. My x variable is state spending per capita and y variable is debt per capita or delinquent debt. 
+
+
+### Preliminary Data Exploration
+Looking at debt levels over time 
+
+```{r }
+
+autochart <- debtlevels %>%
+  ggplot(aes(year, auto, group = state, color = state)) +
+  geom_line()
+
+
+ccchart <- debtlevels %>%
+  ggplot(aes(year, creditcard, group = state, color = state)) +
+  geom_line(show.legend = FALSE)
+
+
+mortchart <- debtlevels %>%
+  ggplot(aes(year, mortgage, 
+             group = state, color = state)) +
+  geom_line(show.legend = FALSE)
+
+
+stuchart <- debtlevels %>%
+  ggplot(aes(year, studentloan, group = state, color = state)) +
+  geom_line(show.legend = FALSE)
+
+autochart / stuchart / ccchart / mortchart 
+
+```
+
+
+
+
+In this analysis, you can see that debt fluctuates with the business cycle. It increases up to the 2008 financial crisis and then goes down and back up again. The exception is student debt, which has been increasing consistently. 
+
+
+Next I want to look at delinquency rates over time: 
+```{r }
+
+aut_delinq <- debtlevels %>%
+  ggplot(aes(year, auto_delinq, group = state, color = state)) +
+  geom_line()
+
+cc_delinq <- debtlevels %>%
+  ggplot(aes(year, creditcard_delinq, group = state, color = state)) +
+  geom_line(show.legend = FALSE)
+
+
+mort_delinq <- debtlevels %>%
+  ggplot(aes(year, mortgage_delinq, 
+             group = state, color = state)) +
+  geom_line(show.legend = FALSE)
+
+
+stu_delinq <- debtlevels %>%
+  ggplot(aes(year, studentloan_delinq, group = state, color = state)) +
+  geom_line(show.legend = FALSE)
+
+
+aut_delinq / stu_delinq / mort_delinq / cc_delinq
+
+```
+Mortgage and credit card delinquencies rise and fall along with the 2008 financial crisis. Student loan and auto loan delinquencies do not behave in the same way. There appears to be something that happened with student loan delinquencies between 2011 and 2012. I will do some research into that. 
+
+
+Next I want to see how state spending has changed over time. 
+```{r }
+
+education <- statespending %>%
+  ggplot(aes(year, education, group = state, color = state)) +
+  geom_line() 
+
+welfare <- statespending %>%
+  ggplot(aes(year, welfare, 
+             group = state, color = state)) +
+  geom_line(show.legend = FALSE)
+
+hospitals <- statespending %>%
+  ggplot(aes(year, hospitals, 
+             group = state, color = state))+
+  geom_line(show.legend = FALSE)
+
+highways <- statespending %>%
+  ggplot(aes(year, highways, 
+             group = state, color = state))+
+  geom_line(show.legend = FALSE)
+
+police <- statespending %>%
+  ggplot(aes(year, police, 
+             group = state, color = state)) +
+  geom_line(show.legend = FALSE)
+
+other <- statespending %>%
+  ggplot(aes(year, other, 
+            group = state, color = state)) +
+  geom_line(show.legend = FALSE)
+
+higher_ed <- statespending %>%
+  ggplot(aes(year, higher_education, 
+            group = state, color = state)) +
+  geom_line(show.legend = FALSE)
+
+
+education / higher_ed / highways / hospitals / police / other
+
+```
+
+Finally I will put together some summary statistics to try and understand more about how debt and spending have changed over time. 
+```{r }
+
+debtlevels <- debtlevels %>% mutate(totaldebt = select(., auto:studentloan) %>% rowSums())
+
+debtovertime <- debtlevels %>% ggplot(aes(year, totaldebt, group = state, color = state)) +
+  geom_line(show.legend = FALSE) 
+
+
+statespending <- statespending %>% mutate(totalspending = select(., education:other) %>% rowSums())
+
+spendingovertime <- statespending  %>% ggplot(aes(year, totalspending, group = state, color = state)) +
+  geom_line(show.legend = FALSE) 
+
+
+
+debtovertime / spendingovertime
+
+```
+
+
