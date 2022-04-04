@@ -36,6 +36,12 @@ style_mono_light(base_color = "#23395b",
   header_font_google = google_font("Inter", "600"),
   text_font_google   = google_font("Inter", "300", "300i"),
   code_font_google   = google_font("Inter"))
+style_xaringan(colors = c(
+  red = "#f34213",
+  purple = "#3e2f5b",
+  orange = "#ff8811",
+  green = "#136f63",
+  white = "#FFFFFF"))
   
 ```
 
@@ -196,21 +202,22 @@ debtspending <- debtspending %>%
 # **How many of you have student loans?**
 --
 
-### 42 million Americans -- about one in every eight -- have student loans
-
---
-
-### 75% of student loan borrowers took our loans to go to two- or four-year colleges
-
---
-
-### 25% of student loan borrowers took out loans for grad school
-
+### **.red[42]** million Americans — about **.red[1]** in every **.red[8]** — have student loans
 
 .footnote[Adam Looney, David Wessel, and Kadija Yilla, Brookings Institute]
+--
+
+### **.red[75%]** of student loan borrowers took out loans to go to two- or four-year colleges — representing about 50% of outstanding debt
+
+--
+
+### **.red[25%]** of student loan borrowers took out loans for grad school — representing the other 50% of outstanding debt
+
+
+
 ---
 
-# Was it always this way? 
+# Has it always been this way? 
 
 ```{r echo = FALSE}
 ggplot(studentdebt, aes(x = year, 
@@ -219,7 +226,6 @@ ggplot(studentdebt, aes(x = year,
   scale_y_continuous(labels = scales::dollar_format())+
   theme_minimal()+
     theme_xaringan(background_color = "#FFFFFF") +
-  scale_xaringan_fill_discrete()+
   theme(plot.title.position = "plot",
         plot.title = element_text(size=20,
                                   face="bold"),
@@ -235,7 +241,117 @@ ggplot(studentdebt, aes(x = year,
 
 ---
 
-name: colors
+# Has it always been this way? 
+--
+```{r echo = FALSE}
+
+debtspending %>%
+  group_by(year, state) %>%
+  summarise(avg_loan = mean(studentloan_adj), na.rm = TRUE) %>%
+  ungroup() %>%
+  group_by(year) %>%
+  summarise(avg_loan_year = mean(avg_loan), na.rm = TRUE)%>%
+  ungroup()%>%
+  mutate(year = as.numeric(year))%>%
+ggplot(aes(x = year, 
+            y = avg_loan_year))+
+  geom_line()+
+  scale_y_continuous(labels = scales::dollar_format())+
+  theme_minimal()+
+    theme_xaringan(background_color = "#FFFFFF") +
+  theme(plot.title.position = "plot",
+        plot.title = element_text(size=20,
+                                  face="bold"),
+        plot.subtitle = element_text(size=15),
+        plot.caption = element_text(size=10))+
+  labs(title = "Average student loan per capita",
+       subtitle = "($2019)",
+       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit",
+       x = "",
+       y = "")
+
+```
+
+
+---
+
+# Has it always been this way? 
+--
+```{r echo = FALSE}
+
+debtspending %>%
+  group_by(year, state) %>%
+  summarise(avg_chg = mean(loan_pct_chg), na.rm = TRUE) %>%
+  ungroup() %>%
+  group_by(year) %>%
+  summarise(avg_loan_chg = mean(avg_chg), na.rm = TRUE)%>%
+  ungroup()%>%
+  mutate(year = as.numeric(year))%>%
+ggplot(aes(x = year, 
+            y = avg_loan_chg))+
+  geom_line()+
+  scale_y_continuous(labels = scales::percent_format())+
+  theme_minimal()+
+    theme_xaringan(background_color = "#FFFFFF") +
+  theme(plot.title.position = "plot",
+        plot.title = element_text(size=20,
+                                  face="bold"),
+        plot.subtitle = element_text(size=15),
+        plot.caption = element_text(size=10))+
+  labs(title = "Annual change in student loans per capita",
+       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit",
+       x = "",
+       y = "")
+
+```
+
+
+---
+# What are the factors driving this increase? 
+--
+```{r echo = FALSE}
+
+educationcosts %>%
+  filter(institution_type != "Public and Private") %>%
+  ggplot()+
+  geom_line(aes(x = year, 
+               y = all_institutions, 
+               color = institution_type,
+               group = institution_type))+
+  scale_y_continuous(labels = scales::dollar_format())+
+  scale_color_discrete(name = "Institution Type")+
+  theme_minimal()+
+  theme_xaringan(background_color = "#FFFFFF")+
+  theme(legend.position = "right",
+    plot.title.position = "plot",
+        plot.title = element_text(size=20,
+                                  face="bold"),
+        plot.subtitle = element_text(size=15),
+        plot.caption = element_text(size=10),
+    legend.title = element_text(size=15),
+    legend.text = element_text(size=15))+
+  scale_x_discrete(breaks=c("2004","2006","2008","2010","2012","2014","2016","2018"))+
+  labs(title = "Annual Tuition and Fees",
+       subtitle = "Private and Public 2- and 4- Year Colleges ($2019)",
+       caption = "Data: U.S. Department of Education, Integrated Postsecondary Education Data System, Institutional Characteristics component",
+       x = "",
+       y = "")
+  
+
+```
+
+
+---
+
+# What are the factors driving this increase? 
+--
+
+```{r}
+
+```
+
+
+---
 
 ## Colors
 
