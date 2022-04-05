@@ -49,7 +49,6 @@ style_xaringan(colors = c(
 library(tidyverse)
 library(readxl)
 library(janitor)
-library(dataReporter)
 library(patchwork)
 library(usdata)
 library(maps)
@@ -529,7 +528,7 @@ debtspending %>%
 
 # Digging deeper in a dashboard 
 
-[**xaringan**](https://github.com/yihui/xaringan)<br>
+[**My beautiful dashboard**](https://nameltz.shinyapps.io/dashboard/)<br>
 
 ---
 class: center, middle
