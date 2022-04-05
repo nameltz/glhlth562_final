@@ -1,0 +1,244 @@
+---
+title: "Meltzer GLHLTH562 Final"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(shiny)
+library(shinyWidgets)
+library(readxl)
+library(janitor)
+library(dataReporter)
+library(usdata)
+library(maps)
+library(ggplot2)
+library(tidyverse)
+```
+
+
+```{r data, include=FALSE}
+
+# read in data with multiple sheets 
+# code from https://stackoverflow.com/questions/49359587/import-excel-workbook-with-multiple-sheets
+
+path <- "./data/household_debt.xlsx"
+sheetnames <- excel_sheets(path)
+debtlevels <- lapply(excel_sheets(path), read_excel, path = path)
+names(debtlevels) <- sheetnames
+
+studentdebt <- lapply(excel_sheets(path), read_excel, path = path)
+names(debtlevels) <- sheetnames
+
+path2 <- "./data/state_spending.xls"
+sheetnames <- excel_sheets(path2)
+statespending <- lapply(excel_sheets(path2), read_excel, path = path2)
+names(statespending) <- sheetnames
+
+
+# read in other data 
+
+
+studentdebt <- read_excel("./data/totaldebtbalance.xlsx") %>%
+  select(c("Year", "Student Loan"))%>%
+  clean_names() %>%
+  filter(grepl("Q4", year))%>%
+  mutate("year" = str_sub(year, 1,2)) %>%
+  mutate("year" = str_glue("20{year}"))%>%
+    mutate("year" = as.numeric(year)) %>%
+   mutate("studentloan_adj" = case_when (
+    year == 2004 ~ student_loan * 1.35,
+     year == 2005 ~ student_loan * 1.31,
+     year == 2006 ~ student_loan * 1.27,
+     year == 2007 ~ student_loan * 1.22,
+     year == 2008 ~ student_loan * 1.22,
+     year == 2009 ~ student_loan * 1.19,
+     year == 2010 ~ student_loan * 1.17,
+     year == 2011 ~ student_loan * 1.14,
+     year == 2012 ~ student_loan * 1.12,
+     year == 2013 ~ student_loan * 1.1,
+     year == 2014 ~ student_loan * 1.09,
+     year == 2015 ~ student_loan * 1.09,
+     year == 2016 ~ student_loan * 1.06,
+     year == 2017 ~ student_loan * 1.04,
+     year == 2018 ~ student_loan * 1.02,
+     year == 2019 ~ student_loan * 1))%>%
+  filter(!is.na(studentloan_adj))%>%
+  mutate("studentloan_adj" = 1000*studentloan_adj)
+
+  
+
+educationcosts <- read_excel("./data/education_costs.xls") %>% 
+  clean_names() %>%
+ mutate("year" = str_sub(year, 1,4))
+
+studentdebt <- read_excel("./data/totaldebtbalance.xlsx") %>%
+  select(c("Year", "Student Loan"))%>%
+  clean_names() %>%
+  filter(grepl("Q4", year))%>%
+  mutate("year" = str_sub(year, 1,2)) %>%
+  mutate("year" = str_glue("20{year}"))%>%
+    mutate("year" = as.numeric(year)) %>%
+   mutate("studentloan_adj" = case_when (
+    year == 2004 ~ student_loan * 1.35,
+     year == 2005 ~ student_loan * 1.31,
+     year == 2006 ~ student_loan * 1.27,
+     year == 2007 ~ student_loan * 1.22,
+     year == 2008 ~ student_loan * 1.22,
+     year == 2009 ~ student_loan * 1.19,
+     year == 2010 ~ student_loan * 1.17,
+     year == 2011 ~ student_loan * 1.14,
+     year == 2012 ~ student_loan * 1.12,
+     year == 2013 ~ student_loan * 1.1,
+     year == 2014 ~ student_loan * 1.09,
+     year == 2015 ~ student_loan * 1.09,
+     year == 2016 ~ student_loan * 1.06,
+     year == 2017 ~ student_loan * 1.04,
+     year == 2018 ~ student_loan * 1.02,
+     year == 2019 ~ student_loan * 1))%>%
+  filter(!is.na(studentloan_adj))%>%
+  mutate("studentloan_adj" = 1000*studentloan_adj)
+
+
+# clean data
+## convert lists to tibble, drop unnecessary columns, filter unnecessary rows
+
+
+
+debtlevels <- enframe(debtlevels) %>% 
+  select(name, value) %>%
+  unnest_wider(value) %>%
+  select(!ends_with(c("_2003", "_2020","_2021"))) %>%
+  rename("debt_type" = name)
+
+
+
+debtlevels  <- debtlevels %>% unnest(cols = c(state:Q4_2019))%>%
+  filter(debt_type != "total") %>%
+  filter(state != "allUS") %>%
+   pivot_longer(!debt_type:state, names_to = "year", values_to = "amount") %>%
+  pivot_wider(names_from = debt_type, values_from = amount)%>%
+   mutate(year = str_remove(year, "Q4_")) %>%
+  select(c("state", "year", "studentloan", "studentloan_delinq"))
+  
+
+statespending <- enframe(statespending, name = "year") %>%
+  select(year, value) %>%
+  unnest_longer(value) %>%
+  unnest(cols = "value") %>% 
+  clean_names() %>%
+  select(c("state", "year", "higher_education"))
+
+## merge datasets 
+
+debtspending <- debtlevels %>%
+  mutate(state = abbr2state(state)) %>%
+  right_join(statespending, by = c("state", "year")) 
+
+
+## adjust for inflation - multipliers from BLS
+
+debtspending <- debtspending %>% 
+  mutate("studentloan_adj" = case_when (
+    year == 2004 ~ studentloan * 1.35,
+     year == 2005 ~ studentloan * 1.31,
+     year == 2006 ~ studentloan * 1.27,
+     year == 2007 ~ studentloan * 1.22,
+     year == 2008 ~ studentloan * 1.22,
+     year == 2009 ~ studentloan * 1.19,
+     year == 2010 ~ studentloan * 1.17,
+     year == 2011 ~ studentloan * 1.14,
+     year == 2012 ~ studentloan * 1.12,
+     year == 2013 ~ studentloan * 1.1,
+     year == 2014 ~ studentloan * 1.09,
+     year == 2015 ~ studentloan * 1.09,
+     year == 2016 ~ studentloan * 1.06,
+     year == 2017 ~ studentloan * 1.04,
+     year == 2018 ~ studentloan * 1.02,
+     year == 2019 ~ studentloan * 1)) %>%
+  mutate("highered_adj" = case_when (
+    year == 2004 ~ higher_education * 1.35,
+     year == 2005 ~ higher_education * 1.31,
+     year == 2006 ~ higher_education * 1.27,
+     year == 2007 ~ higher_education * 1.22,
+     year == 2008 ~ higher_education * 1.22,
+     year == 2009 ~ higher_education * 1.19,
+     year == 2010 ~ higher_education * 1.17,
+     year == 2011 ~ higher_education * 1.14,
+     year == 2012 ~ higher_education * 1.12,
+     year == 2013 ~ higher_education * 1.1,
+     year == 2014 ~ higher_education * 1.09,
+     year == 2015 ~ higher_education * 1.09,
+     year == 2016 ~ higher_education * 1.06,
+     year == 2017 ~ higher_education * 1.04,
+     year == 2018 ~ higher_education * 1.02,
+     year == 2019 ~ higher_education * 1)) %>%
+  select(-c("studentloan", "higher_education"))
+   
+
+debtspending <- debtspending %>%
+  group_by(state) %>%
+  mutate(loan_pct_chg = 100 *((studentloan_adj-lag(studentloan_adj))/lag(studentloan_adj))) %>%
+   mutate(spend_pct_chg = 100 *((highered_adj-lag(highered_adj))/lag(highered_adj)))
+
+statemap <- map_data("state") %>%
+  mutate(state = str_to_title(region, locale = "en"))
+  
+debtspending <- debtspending %>%
+  left_join(statemap, by = "state") %>%
+  filter(!is.na(long))
+
+### Create vector of states 
+
+states <- state.name %>% str_remove("Alaska") %>% str_remove("Hawaii") 
+
+states <- as_vector(states)
+
+```
+
+
+
+
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+```{r}
+selectInput("state", label = "State:",
+            options = c(states))
+
+
+
+
+
+```
+
+
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+```
+
+### Chart C
+
+```{r}
+
+```
+
