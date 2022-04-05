@@ -33,9 +33,9 @@ knitr::opts_chunk$set(
 library(xaringanthemer)
 library(sysfonts)
 style_mono_light(base_color = "#23395b",
-  header_font_google = google_font("Inter", "600"),
-  text_font_google   = google_font("Inter", "300", "300i"),
-  code_font_google   = google_font("Inter"))
+  header_font_google = google_font("Mulish", "600"),
+  text_font_google   = google_font("Mulish", "300", "300i"),
+  code_font_google   = google_font("Mulish"))
 style_xaringan(colors = c(
   red = "#f34213",
   purple = "#3e2f5b",
@@ -108,6 +108,34 @@ studentdebt <- read_excel("../data/totaldebtbalance.xlsx") %>%
 educationcosts <- read_excel("../data/education_costs.xls") %>% 
   clean_names() %>%
  mutate("year" = str_sub(year, 1,4))
+
+studentdebt <- read_excel("../data/totaldebtbalance.xlsx") %>%
+  select(c("Year", "Student Loan"))%>%
+  clean_names() %>%
+  filter(grepl("Q4", year))%>%
+  mutate("year" = str_sub(year, 1,2)) %>%
+  mutate("year" = str_glue("20{year}"))%>%
+    mutate("year" = as.numeric(year)) %>%
+   mutate("studentloan_adj" = case_when (
+    year == 2004 ~ student_loan * 1.35,
+     year == 2005 ~ student_loan * 1.31,
+     year == 2006 ~ student_loan * 1.27,
+     year == 2007 ~ student_loan * 1.22,
+     year == 2008 ~ student_loan * 1.22,
+     year == 2009 ~ student_loan * 1.19,
+     year == 2010 ~ student_loan * 1.17,
+     year == 2011 ~ student_loan * 1.14,
+     year == 2012 ~ student_loan * 1.12,
+     year == 2013 ~ student_loan * 1.1,
+     year == 2014 ~ student_loan * 1.09,
+     year == 2015 ~ student_loan * 1.09,
+     year == 2016 ~ student_loan * 1.06,
+     year == 2017 ~ student_loan * 1.04,
+     year == 2018 ~ student_loan * 1.02,
+     year == 2019 ~ student_loan * 1))%>%
+  filter(!is.na(studentloan_adj))%>%
+  mutate("studentloan_adj" = 1000*studentloan_adj)
+
 
 # clean data
 ## convert lists to tibble, drop unnecessary columns, filter unnecessary rows
@@ -217,7 +245,8 @@ debtspending <- debtspending %>%
 
 ---
 
-# Has it always been this way? 
+# It has not always been this way
+
 
 ```{r echo = FALSE}
 ggplot(studentdebt, aes(x = year, 
@@ -241,8 +270,9 @@ ggplot(studentdebt, aes(x = year,
 
 ---
 
-# Has it always been this way? 
---
+# It has not always been this way
+
+
 ```{r echo = FALSE}
 
 debtspending %>%
@@ -272,23 +302,23 @@ ggplot(aes(x = year,
 
 ```
 
-
 ---
 
-# Has it always been this way? 
---
-```{r echo = FALSE}
+# Is the increase in student debt a problem? 
 
+
+```{r, echo = FALSE}
 debtspending %>%
   group_by(year, state) %>%
-  summarise(avg_chg = mean(loan_pct_chg), na.rm = TRUE) %>%
+  summarise(delinq = mean(studentloan_delinq), na.rm = TRUE) %>%
   ungroup() %>%
   group_by(year) %>%
-  summarise(avg_loan_chg = mean(avg_chg), na.rm = TRUE)%>%
+  summarise(avg_delinq = mean(delinq), na.rm = TRUE)%>%
   ungroup()%>%
   mutate(year = as.numeric(year))%>%
+  mutate(avg_delinq = avg_delinq/100)%>%
 ggplot(aes(x = year, 
-            y = avg_loan_chg))+
+            y = avg_delinq))+
   geom_line()+
   scale_y_continuous(labels = scales::percent_format())+
   theme_minimal()+
@@ -298,7 +328,7 @@ ggplot(aes(x = year,
                                   face="bold"),
         plot.subtitle = element_text(size=15),
         plot.caption = element_text(size=10))+
-  labs(title = "Annual change in student loans per capita",
+  labs(title = "Average student loan delinquency rate",
        caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit",
        x = "",
        y = "")
@@ -307,8 +337,10 @@ ggplot(aes(x = year,
 
 
 ---
-# What are the factors driving this increase? 
---
+
+# Tuition and fees have increased significantly
+
+
 ```{r echo = FALSE}
 
 educationcosts %>%
@@ -343,10 +375,10 @@ educationcosts %>%
 
 ---
 
-# What are the factors driving this increase? 
---
+# State spending on higher education has decreased
 
-```{r}
+
+```{r, echo = FALSE}
 debtspending %>%
   group_by(year, state) %>%
   summarise(avg_spend = mean(highered_adj), na.rm = TRUE) %>%
@@ -378,16 +410,16 @@ ggplot(aes(x = year,
 # Breaking it down by state
 
 
-
-```{r}
+```{r, echo = FALSE}
 debtspending %>%
   filter(year == 2004) %>%
   ggplot(aes(x = long, y = lat, group = group))+
   geom_polygon(aes(fill = studentloan_adj), color = "black")+
-  scale_fill_gradient(low = "white", 
+   scale_fill_gradient(low = "white", 
                         high = "red",
-                        name = "Avg. student loans per capita, 2004",
-                        label = scales::dollar_format()) + 
+                        name = "Avg. student loans per capita ($2019)",
+                        label = scales::dollar_format(),
+                       limits = c(1000,8000)) + 
   theme(legend.position = "right",
         axis.text.x = element_blank(),
         axis.text.y = element_blank(),
@@ -400,7 +432,6 @@ debtspending %>%
                                   face="bold"),
         plot.caption = element_text(size=10))+
   labs(title = "Average Student Loans Per Capita, 2004",
-       subtitle = "$2019",
        caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit")
  
 
@@ -408,15 +439,18 @@ debtspending %>%
 
 ---
 
-```{r}
+# Breaking it down by state
+
+```{r, echo = FALSE}
 debtspending %>%
   filter(year == 2019) %>%
   ggplot(aes(x = long, y = lat, group = group))+
   geom_polygon(aes(fill = studentloan_adj), color = "black")+
   scale_fill_gradient(low = "white", 
                         high = "red",
-                        name = "Avg. student loans per capita, 2019",
-                        label = scales::dollar_format()) + 
+                        name = "Avg. student loans per capita ($2019)",
+                        label = scales::dollar_format(),
+                      limits = c(1000,8000)) + 
   theme(legend.position = "right",
         axis.text.x = element_blank(),
         axis.text.y = element_blank(),
@@ -433,305 +467,69 @@ debtspending %>%
 
 ```
 
-
-
-
-
-
-
----
-## Colors
-
-.left-column[
-Text color
-
-[Link Color](#3)
-
-**Bold Color**
-
-_Italic Color_
-
-`Inline Code`
-]
-
-.right-column[
-Lorem ipsum dolor sit amet, [consectetur adipiscing elit (link)](#3), 
-sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-Erat nam at lectus urna.
-Pellentesque elit ullamcorper **dignissim cras tincidunt (bold)** lobortis feugiat. 
-_Eros donec ac odio tempor_ orci dapibus ultrices. 
-Id porta nibh venenatis cras sed felis eget velit aliquet.
-Aliquam id diam maecenas ultricies mi.
-Enim sit amet 
-`code_color("inline")`
-venenatis urna cursus eget nunc scelerisque viverra.
-]
-
 ---
 
-# Big Topic or Inverse Slides `#`
+# Breaking it down by state
 
-## Slide Headings `##`
-
-### Sub-slide Headings `###`
-
-#### Bold Call-Out `####`
-
-This is a normal paragraph text. Only use header levels 1-4.
-
-##### Possible, but not recommended `#####`
-
-###### Definitely don't use h6 `######`
-
----
-
-# Left-Column Headings
-
-.left-column[
-## First
-
-## Second
-
-## Third
-]
-
-.right-column[
-Dolor quis aptent mus a dictum ultricies egestas.
-
-Amet egestas neque tempor fermentum proin massa!
-
-Dolor elementum fermentum pharetra lectus arcu pulvinar.
-]
-
----
-class: inverse center middle
-
-# Topic Changing Interstitial
-
---
-
-
-class: inverse center middle
-
----
-layout: true
-
-## Blocks
-
----
-
-### Blockquote
-
-> This is a blockquote following a header.
->
-> When something is important enough, you do it even if the odds are not in your favor.
-
----
-
-### Code Blocks
-
-#### R Code```{r eval=FALSE}
-ggplot(gapminder) +
-  aes(x = gdpPercap, y = lifeExp, size = pop, color = country) +
-  geom_point() +
-  facet_wrap(~year)
-```
-
-#### JavaScript
-
-```js
-var fun = function lang(l) {
-  dateformat.i18n = require('./lang/' + l)
-  return true;
-}
+```{r, echo = FALSE}
+debtspending %>%
+  filter(year == 2004) %>%
+  ggplot(aes(x = long, y = lat, group = group))+
+  geom_polygon(aes(fill = studentloan_delinq), color = "black")+
+   scale_fill_gradient(low = "white", 
+                        high = "red",
+                        name = "% Delinquent",
+                        limits = c(1,20)) + 
+  theme(legend.position = "right",
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        rect = element_blank(),
+        plot.title.position = "plot",
+        plot.title = element_text(size=20,
+                                  face="bold"),
+        plot.caption = element_text(size=10))+
+  labs(title = "Student Loan Delinquency Rate, 2004",
+       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit")
+ 
 ```
 
 ---
 
-### More R Code
+# Breaking it down by state
 
-```{r eval=FALSE}
-dplyr::starwars %>% dplyr::slice_sample(n = 4)
+```{r, echo = FALSE}
+debtspending %>%
+  filter(year == 2019) %>%
+  ggplot(aes(x = long, y = lat, group = group))+
+  geom_polygon(aes(fill = studentloan_delinq), color = "black")+
+   scale_fill_gradient(low = "white", 
+                        high = "red",
+                        name = "% Delinquent",
+                      limits = c(1,20) ) + 
+  theme(legend.position = "right",
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        rect = element_blank(),
+        plot.title.position = "plot",
+        plot.title = element_text(size=20,
+                                  face="bold"),
+        plot.caption = element_text(size=10))+
+  labs(title = "Student Loan Delinquency Rate, 2019",
+       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit")
+ 
 ```
 
 ---
 
-```{r message=TRUE, eval=requireNamespace("cli", quietly = TRUE)}
-cli::cli_alert_success("It worked!")
-```
+# Digging deeper in a dashboard 
 
---
-
-```{r message=TRUE}
-message("Just a friendly message")
-```
-
---
-
-```{r warning=TRUE}
-warning("This could be bad...")
-```
-
---
-
-```{r error=TRUE}
-stop("I hope you're sitting down for this")
-```
-
-
----
-layout: true
-
-## Tables
-
----
-exclude: `r if (requireNamespace("tibble", quietly=TRUE)) "false" else "true"`
-
-```{r eval=requireNamespace("tibble", quietly=TRUE)}
-tibble::as_tibble(mtcars)
-```
-
----
-
-```{r}
-knitr::kable(head(mtcars), format = 'html')
-```
-
----
-exclude: `r if (requireNamespace("DT", quietly=TRUE)) "false" else "true"`
-
-```{r eval=requireNamespace("DT", quietly=TRUE)}
-DT::datatable(head(mtcars), fillContainer = FALSE, options = list(pageLength = 4))
-```
-
----
-layout: true
-
-## Lists
-
----
-
-.pull-left[
-#### Here is an unordered list:
-
-*   Item foo
-*   Item bar
-*   Item baz
-*   Item zip
-]
-
-.pull-right[
-
-#### And an ordered list:
-
-1.  Item one
-1.  Item two
-1.  Item three
-1.  Item four
-]
-
----
-
-### And a nested list:
-
-- level 1 item
-  - level 2 item
-  - level 2 item
-    - level 3 item
-    - level 3 item
-- level 1 item
-  - level 2 item
-  - level 2 item
-  - level 2 item
-- level 1 item
-  - level 2 item
-  - level 2 item
-- level 1 item
-
----
-
-### Nesting an ol in ul in an ol
-
-- level 1 item (ul)
-  1. level 2 item (ol)
-  1. level 2 item (ol)
-    - level 3 item (ul)
-    - level 3 item (ul)
-- level 1 item (ul)
-  1. level 2 item (ol)
-  1. level 2 item (ol)
-    - level 3 item (ul)
-    - level 3 item (ul)
-  1. level 4 item (ol)
-  1. level 4 item (ol)
-    - level 3 item (ul)
-    - level 3 item (ul)
-- level 1 item (ul)
-
----
-layout: true
-
-## Plots
-
----
-
-```{r plot-example, eval=requireNamespace("ggplot2", quietly=TRUE)}
-library(ggplot2)
-(g <- ggplot(mpg) + aes(hwy, cty, color = class) + geom_point())
-```
-
----
-
-```{r plot-example-themed, eval=requireNamespace("showtext", quietly=TRUE) && requireNamespace("ggplot2", quietly=TRUE)}
-g + xaringanthemer::theme_xaringan(text_font_size = 16, title_font_size = 18) +
-  ggtitle("A Plot About Cars")
-```
-
-.footnote[Requires `{showtext}`]
-
----
-layout: false
-
-## Square image
-
-<center><img src="https://octodex.github.com/images/labtocat.png" alt="GithHub Octocat" height="400px" /></center>
-
-.footnote[GitHub Octocat]
-
----
-
-### Wide image
-
-![A wide image with a diagram of branching in git.](https://docs.github.com/assets/images/help/repository/branching.png)
-
-.footnote[Wide images scale to 100% slide width]
-
----
-
-## Two images
-
-.pull-left[
-![A GitHub Octocat, style "mother hubber"](https://octodex.github.com/images/motherhubbertocat.png)
-]
-
-.pull-right[
-![A GitHub Octocat, style "dinotcat"](https://octodex.github.com/images/dinotocat.png)
-]
-
----
-
-### Definition lists can be used with HTML syntax.
-
-<dl>
-<dt>Name</dt>
-<dd>Godzilla</dd>
-<dt>Born</dt>
-<dd>1952</dd>
-<dt>Birthplace</dt>
-<dd>Japan</dd>
-<dt>Color</dt>
-<dd>Green</dd>
-</dl>
+[**xaringan**](https://github.com/yihui/xaringan)<br>
 
 ---
 class: center, middle
@@ -741,6 +539,6 @@ class: center, middle
 Slides created via the R packages:
 
 [**xaringan**](https://github.com/yihui/xaringan)<br>
-[gadenbuie/xaringanthemer](https://github.com/gadenbuie/xaringanthemer)
+[gadenbuie/xaringanthemer](https://github.com/gadenbuie/xaringanthemer).
 
-The chakra comes from [remark.js](https://remarkjs.com), [**knitr**](http://yihui.name/knitr), and [R Markdown](https://rmarkdown.rstudio.com).
+
