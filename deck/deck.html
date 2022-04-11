@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Visualizing Student Debt:</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Natalie Meltzer" />
+    <meta name="date" content="2022-04-12" />
+    <script src="deck_files/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Visualizing Student Debt:
+## Student Loans, State Spending, and Tuition
+### Natalie Meltzer
+### April 12, 2022
+
+---
+
+
+
+
+
+
+
+
+
+
+class: center, middle
+
+# Is there a relationship between student debt and state spending on higher education? 
+
+---
+
+# Project overview
+
+.pull-left[
+
+### Data 
+
+- Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit: includes state-level student loans per-capita and delinquency rates
+
+- U.S. Census Bureau, Annual Survey of State and Local Government Finances: includes state-level spending on higher education per capita
+
+- Data covers 2004-2019
+
+
+]
+
+.pull-right[
+
+### Methods 
+
+- Exploratory data analysis 
+
+- Visualize changes in value of loans outstanding, average amount owed, and delinquency rates
+
+- Break down by state to better understand relationship
+]
+ 
+---
+
+# **Background: The State of Student Loans**
+--
+
+
+### **.red[42]** million Americans — about **.red[1]** in every **.red[8]** — have student loans
+
+.footnote[Adam Looney, David Wessel, and Kadija Yilla, Brookings Institute 2021]
+--
+
+
+### **.red[75%]** of student loan borrowers took out loans to go to two- or four-year colleges — representing about 50% of outstanding debt
+
+--
+
+
+### **.red[25%]** of student loan borrowers took out loans for grad school — representing the other 50% of outstanding debt
+
+---
+
+class: center, middle
+
+&lt;img src="deck_files/figure-html/unnamed-chunk-1-1.png" width="100%" /&gt;
+
+---
+
+
+class: center, middle
+
+&lt;img src="deck_files/figure-html/unnamed-chunk-2-1.png" width="100%" /&gt;
+
+---
+class: center, middle
+
+&lt;img src="deck_files/figure-html/unnamed-chunk-3-1.png" width="100%" /&gt;
+
+---
+
+class: center, middle
+
+&lt;img src="deck_files/figure-html/unnamed-chunk-4-1.png" width="100%" /&gt;
+
+
+---
+
+class: center, middle
+
+&lt;img src="deck_files/figure-html/unnamed-chunk-5-1.png" width="100%" /&gt;
+---
+
+## Breaking it down by state: student loans
+
+.pull-left[
+![an image](studentloans2004.png)
+]
+
+.pull-right[
+![an image](studentloans2019.png)
+]
+
+
+---
+## Breaking it down by state: spending on higher ed
+
+.pull-left[
+![an image](highered2004.png)
+]
+
+.pull-right[
+![an image](highered2019.png)
+]
+
+---
+
+.pull-left[
+
+#### Number of years each state is one of the 10 most indebted per capita
+
+
+```
+## 
+## 
+## state             n
+## --------------  ---
+## Massachusetts    16
+## Minnesota        16
+## New York         16
+## Maryland         15
+## Colorado         14
+## New Hampshire    14
+## Pennsylvania     14
+## Ohio             10
+## Georgia           9
+## Iowa              8
+## North Dakota      8
+## Vermont           7
+## New Jersey        6
+## South Dakota      5
+## Connecticut       1
+## Delaware          1
+```
+]
+
+.pull-right[
+#### Number of years each state is one of the 10 lowest spenders per capita
+
+
+```
+## 
+## 
+## state             n
+## --------------  ---
+## Florida          16
+## Maine            16
+## Nevada           16
+## Tennessee        16
+## Georgia          15
+## Missouri         15
+## Rhode Island     15
+## New Hampshire    12
+## Idaho             8
+## Louisiana         6
+## Massachusetts     6
+## New Jersey        6
+## New York          6
+## Illinois          3
+## Pennsylvania      3
+## South Dakota      1
+```
+]
+
+---
+
+class: inverse
+# Limitations 
+
+### Short time frame: it may take a longer period of time for decisions about education spending to influence student loan burdens
+
+### Per capita spending is an incomplete metric: it doesn’t provide information about state demographics, policy decisions, administrative procedures, or the choices its residents make 
+
+### Spending on higher education is often driven by the number of students in public universities
+
+### Exploratory data analysis does not evaluate causal link 
+
+---
+class: center, middle
+
+# Digging deeper in a dashboard 
+
+[**My beautiful dashboard**](https://nameltz.shinyapps.io/dashboard/)&lt;br&gt;
+
+---
+class: center, middle
+
+# Thanks!
+
+Slides created via the R packages:
+
+[**xaringan**](https://github.com/yihui/xaringan)&lt;br&gt;
+[gadenbuie/xaringanthemer](https://github.com/gadenbuie/xaringanthemer).
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"slideNumberFormat": "%current%",
+"highlightStyle": "github",
+"highlightLines": true,
+"ratio": "16:9",
+"countIncrementalSlides": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

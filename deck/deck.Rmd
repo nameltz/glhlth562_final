@@ -3,7 +3,7 @@ title: "Visualizing Student Debt:"
 subtitle: "Student Loans, State Spending, and Tuition" 
 author: 
   - Natalie Meltzer
-date: '`r Sys.Date()`'
+date: "April 12, 2022"
 output:
   xaringan::moon_reader:
     css: xaringan-themer.css
@@ -223,122 +223,89 @@ statemap <- map_data("state") %>%
 debtspending <- debtspending %>%
   left_join(statemap, by = "state") %>%
   filter(!is.na(long))
+
+
+most_indebted <- debtspending %>%
+  distinct(state, year, .keep_all = TRUE) %>%
+  group_by(year) %>%
+  arrange(desc(studentloan_adj))%>%
+  slice_head(n = 10)%>%
+  ungroup()%>%
+  count(state)%>%
+  arrange(desc(n))
+
+  
+mostdebt <-  knitr::kable(most_indebted, "simple")
+  
+least_spending <- debtspending %>%
+  distinct(state, year, .keep_all = TRUE) %>%
+  group_by(year) %>%
+  arrange(highered_adj)%>%
+  slice_head(n = 10)%>%
+  ungroup()%>%
+  count(state)%>%
+  arrange(desc(n))
+
+leastspending <-  knitr::kable(least_spending, "simple")
+
 ```
 
 
-# **How many of you have student loans?**
+
+class: center, middle
+
+# Is there a relationship between student debt and state spending on higher education? 
+
+---
+
+# Project overview
+
+.pull-left[
+
+### Data 
+
+- Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit: includes state-level student loans per-capita and delinquency rates
+
+- U.S. Census Bureau, Annual Survey of State and Local Government Finances: includes state-level spending on higher education per capita
+
+- Data covers 2004-2019
+
+
+]
+
+.pull-right[
+
+### Methods 
+
+- Exploratory data analysis 
+
+- Visualize changes in value of loans outstanding, average amount owed, and delinquency rates
+
+- Break down by state to better understand relationship
+]
+ 
+---
+
+# **Background: The State of Student Loans**
 --
+
 
 ### **.red[42]** million Americans — about **.red[1]** in every **.red[8]** — have student loans
 
-.footnote[Adam Looney, David Wessel, and Kadija Yilla, Brookings Institute]
+.footnote[Adam Looney, David Wessel, and Kadija Yilla, Brookings Institute 2021]
 --
+
 
 ### **.red[75%]** of student loan borrowers took out loans to go to two- or four-year colleges — representing about 50% of outstanding debt
 
 --
 
+
 ### **.red[25%]** of student loan borrowers took out loans for grad school — representing the other 50% of outstanding debt
 
-
-
 ---
 
-# It has not always been this way
-
-
-```{r echo = FALSE}
-ggplot(studentdebt, aes(x = year, 
-            y = studentloan_adj))+
-  geom_line()+
-  scale_y_continuous(labels = scales::dollar_format())+
-  theme_minimal()+
-    theme_xaringan(background_color = "#FFFFFF") +
-  theme(plot.title.position = "plot",
-        plot.title = element_text(size=20,
-                                  face="bold"),
-        plot.subtitle = element_text(size=15),
-        plot.caption = element_text(size=10))+
-  labs(title = "Total student loan burden",
-       subtitle = "Dollars outstanding (in billions, $2019)",
-       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit",
-       x = "",
-       y = "")
-
-```
-
----
-
-# It has not always been this way
-
-
-```{r echo = FALSE}
-
-debtspending %>%
-  group_by(year, state) %>%
-  summarise(avg_loan = mean(studentloan_adj), na.rm = TRUE) %>%
-  ungroup() %>%
-  group_by(year) %>%
-  summarise(avg_loan_year = mean(avg_loan), na.rm = TRUE)%>%
-  ungroup()%>%
-  mutate(year = as.numeric(year))%>%
-ggplot(aes(x = year, 
-            y = avg_loan_year))+
-  geom_line()+
-  scale_y_continuous(labels = scales::dollar_format())+
-  theme_minimal()+
-    theme_xaringan(background_color = "#FFFFFF") +
-  theme(plot.title.position = "plot",
-        plot.title = element_text(size=20,
-                                  face="bold"),
-        plot.subtitle = element_text(size=15),
-        plot.caption = element_text(size=10))+
-  labs(title = "Average student loan per capita",
-       subtitle = "($2019)",
-       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit",
-       x = "",
-       y = "")
-
-```
-
----
-
-# Is the increase in student debt a problem? 
-
-
-```{r, echo = FALSE}
-debtspending %>%
-  group_by(year, state) %>%
-  summarise(delinq = mean(studentloan_delinq), na.rm = TRUE) %>%
-  ungroup() %>%
-  group_by(year) %>%
-  summarise(avg_delinq = mean(delinq), na.rm = TRUE)%>%
-  ungroup()%>%
-  mutate(year = as.numeric(year))%>%
-  mutate(avg_delinq = avg_delinq/100)%>%
-ggplot(aes(x = year, 
-            y = avg_delinq))+
-  geom_line()+
-  scale_y_continuous(labels = scales::percent_format())+
-  theme_minimal()+
-    theme_xaringan(background_color = "#FFFFFF") +
-  theme(plot.title.position = "plot",
-        plot.title = element_text(size=20,
-                                  face="bold"),
-        plot.subtitle = element_text(size=15),
-        plot.caption = element_text(size=10))+
-  labs(title = "Average student loan delinquency rate",
-       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit",
-       x = "",
-       y = "")
-
-```
-
-
----
-
-# Tuition and fees have increased significantly
-
+class: center, middle
 
 ```{r echo = FALSE}
 
@@ -362,20 +329,109 @@ educationcosts %>%
     legend.title = element_text(size=15),
     legend.text = element_text(size=15))+
   scale_x_discrete(breaks=c("2004","2006","2008","2010","2012","2014","2016","2018"))+
-  labs(title = "Annual Tuition and Fees",
-       subtitle = "Private and Public 2- and 4- Year Colleges ($2019)",
-       caption = "Data: U.S. Department of Education, Integrated Postsecondary Education Data System, Institutional Characteristics component",
+  labs(title = "Tuition and Fees Have Increased During the Study Period",
+       subtitle = "($2019)",
+       caption = "Data: U.S. Department of Education, Integrated Postsecondary Education Data System, \nInstitutional Characteristics component",
        x = "",
        y = "")
   
 
 ```
 
+---
+
+
+class: center, middle
+
+```{r echo = FALSE}
+ggplot(studentdebt, aes(x = year, 
+            y = studentloan_adj))+
+  geom_line()+
+  scale_y_continuous(labels = scales::dollar_format())+
+  theme_minimal()+
+    theme_xaringan(background_color = "#FFFFFF") +
+  theme(plot.title.position = "plot",
+        plot.title = element_text(size=20,
+                                  face="bold"),
+        plot.subtitle = element_text(size=15),
+        plot.caption = element_text(size=10))+
+  labs(title = "Total student loans outstanding tripled from 2004 to 2019",
+       subtitle = "Dollars outstanding (in billions, $2019)",
+       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit",
+       x = "",
+       y = "")
+
+```
+
+---
+class: center, middle
+
+```{r echo = FALSE}
+
+debtspending %>%
+  group_by(year, state) %>%
+  summarise(avg_loan = mean(studentloan_adj), na.rm = TRUE) %>%
+  ungroup() %>%
+  group_by(year) %>%
+  summarise(avg_loan_year = mean(avg_loan), na.rm = TRUE)%>%
+  ungroup()%>%
+  mutate(year = as.numeric(year))%>%
+ggplot(aes(x = year, 
+            y = avg_loan_year))+
+  geom_line()+
+  scale_y_continuous(labels = scales::dollar_format())+
+  theme_minimal()+
+    theme_xaringan(background_color = "#FFFFFF") +
+  theme(plot.title.position = "plot",
+        plot.title = element_text(size=20,
+                                  face="bold"),
+        plot.subtitle = element_text(size=15),
+        plot.caption = element_text(size=10))+
+  labs(title = "Average student loans per capita increased \nfrom $1,991 in 2004 to $5,442 in 2019",
+       subtitle = "($2019)",
+       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit",
+       x = "",
+       y = "")
+
+```
 
 ---
 
-# State spending on higher education has decreased
+class: center, middle
 
+```{r, echo = FALSE}
+debtspending %>%
+  group_by(year, state) %>%
+  summarise(delinq = mean(studentloan_delinq), na.rm = TRUE) %>%
+  ungroup() %>%
+  group_by(year) %>%
+  summarise(avg_delinq = mean(delinq), na.rm = TRUE)%>%
+  ungroup()%>%
+  mutate(year = as.numeric(year))%>%
+  mutate(avg_delinq = avg_delinq/100)%>%
+ggplot(aes(x = year, 
+            y = avg_delinq))+
+  geom_line()+
+  scale_y_continuous(labels = scales::percent_format(),
+                     breaks = c(0,.02,.04,.06,.08,.10,.12))+
+  theme_minimal()+
+    theme_xaringan(background_color = "#FFFFFF") +
+  theme(plot.title.position = "plot",
+        plot.title = element_text(size=20,
+                                  face="bold"),
+        plot.subtitle = element_text(size=15),
+        plot.caption = element_text(size=10))+
+  labs(title = "Average student loan delinquency rate increased \nfrom 6% in 2004 to 11% in 2019",
+       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit",
+       x = "",
+       y = "")
+
+```
+
+
+---
+
+class: center, middle
 
 ```{r, echo = FALSE}
 debtspending %>%
@@ -397,7 +453,7 @@ ggplot(aes(x = year,
                                   face="bold"),
         plot.subtitle = element_text(size=15),
         plot.caption = element_text(size=10))+
-  labs(title = "Average State Spending on Higher Education Per Capita",
+  labs(title = "Average Per Capita State Spending on Higher Education Has Decreased",
        subtitle = "$2019",
        caption = "Data: U.S. Census Bureau, Annual Survey of State and Local Government Finances\n Compiled by the Urban-Brookings Tax Policy Center",
        x = "",
@@ -406,125 +462,62 @@ ggplot(aes(x = year,
 ```
 ---
 
-# Breaking it down by state
+## Breaking it down by state: student loans
+
+.pull-left[
+![an image](studentloans2004.png)
+]
+
+.pull-right[
+![an image](studentloans2019.png)
+]
 
 
-```{r, echo = FALSE}
-debtspending %>%
-  filter(year == 2004) %>%
-  ggplot(aes(x = long, y = lat, group = group))+
-  geom_polygon(aes(fill = studentloan_adj), color = "black")+
-   scale_fill_gradient(low = "white", 
-                        high = "red",
-                        name = "Avg. student loans per capita ($2019)",
-                        label = scales::dollar_format(),
-                       limits = c(1000,8000)) + 
-  theme(legend.position = "right",
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        rect = element_blank(),
-        plot.title.position = "plot",
-        plot.title = element_text(size=20,
-                                  face="bold"),
-        plot.caption = element_text(size=10))+
-  labs(title = "Average Student Loans Per Capita, 2004",
-       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit")
- 
+---
+## Breaking it down by state: spending on higher ed
 
-```
+.pull-left[
+![an image](highered2004.png)
+]
+
+.pull-right[
+![an image](highered2019.png)
+]
 
 ---
 
-# Breaking it down by state
+.pull-left[
+
+#### Number of years each state is one of the 10 most indebted per capita
 
 ```{r, echo = FALSE}
-debtspending %>%
-  filter(year == 2019) %>%
-  ggplot(aes(x = long, y = lat, group = group))+
-  geom_polygon(aes(fill = studentloan_adj), color = "black")+
-  scale_fill_gradient(low = "white", 
-                        high = "red",
-                        name = "Avg. student loans per capita ($2019)",
-                        label = scales::dollar_format(),
-                      limits = c(1000,8000)) + 
-  theme(legend.position = "right",
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        rect = element_blank(),
-        plot.title.position = "plot",
-        plot.title = element_text(size=20,
-                                  face="bold"),
-        plot.caption = element_text(size=10))+
-  labs(title = "Average Student Loans Per Capita, 2019",
-       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit")
-
+print(mostdebt)
 ```
+]
+
+.pull-right[
+#### Number of years each state is one of the 10 lowest spenders per capita
+
+```{r, echo = FALSE}
+print(leastspending)
+```
+]
 
 ---
 
-# Breaking it down by state
+class: inverse
+# Limitations 
 
-```{r, echo = FALSE}
-debtspending %>%
-  filter(year == 2004) %>%
-  ggplot(aes(x = long, y = lat, group = group))+
-  geom_polygon(aes(fill = studentloan_delinq), color = "black")+
-   scale_fill_gradient(low = "white", 
-                        high = "red",
-                        name = "% Delinquent",
-                        limits = c(1,20)) + 
-  theme(legend.position = "right",
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        rect = element_blank(),
-        plot.title.position = "plot",
-        plot.title = element_text(size=20,
-                                  face="bold"),
-        plot.caption = element_text(size=10))+
-  labs(title = "Student Loan Delinquency Rate, 2004",
-       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit")
- 
-```
+### Short time frame: it may take a longer period of time for decisions about education spending to influence student loan burdens
+
+### Per capita spending is an incomplete metric: it doesn’t provide information about state demographics, policy decisions, administrative procedures, or the choices its residents make 
+
+### Spending on higher education is often driven by the number of students in public universities
+
+### Exploratory data analysis does not evaluate causal link 
 
 ---
-
-# Breaking it down by state
-
-```{r, echo = FALSE}
-debtspending %>%
-  filter(year == 2019) %>%
-  ggplot(aes(x = long, y = lat, group = group))+
-  geom_polygon(aes(fill = studentloan_delinq), color = "black")+
-   scale_fill_gradient(low = "white", 
-                        high = "red",
-                        name = "% Delinquent",
-                      limits = c(1,20) ) + 
-  theme(legend.position = "right",
-        axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank(),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        rect = element_blank(),
-        plot.title.position = "plot",
-        plot.title = element_text(size=20,
-                                  face="bold"),
-        plot.caption = element_text(size=10))+
-  labs(title = "Student Loan Delinquency Rate, 2019",
-       caption = "Data: Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit")
- 
-```
-
----
+class: center, middle
 
 # Digging deeper in a dashboard 
 
@@ -539,5 +532,3 @@ Slides created via the R packages:
 
 [**xaringan**](https://github.com/yihui/xaringan)<br>
 [gadenbuie/xaringanthemer](https://github.com/gadenbuie/xaringanthemer).
-
-

@@ -1,0 +1,13 @@
+name: dashboard
+title:
+username:
+account: nameltz
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6021117
+bundleId: 5767680
+url: https://nameltz.shinyapps.io/dashboard/
+when: 1649184879.35804
+lastSyncTime: 1649184879.35807
+asMultiple: FALSE
+asStatic: FALSE
