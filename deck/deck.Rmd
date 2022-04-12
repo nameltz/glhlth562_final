@@ -292,7 +292,7 @@ class: center, middle
 
 ### **.red[42]** million Americans — about **.red[1]** in every **.red[8]** — have student loans
 
-.footnote[Adam Looney, David Wessel, and Kadija Yilla, Brookings Institute 2021]
+.footnote[Adam Looney, David Wessel, and Kadija Yilla, Brookings Institute 2020]
 --
 
 
@@ -502,6 +502,38 @@ print(mostdebt)
 print(leastspending)
 ```
 ]
+
+---
+class: center, middle
+
+```{r, echo=FALSE}
+
+debtspending %>%
+  ggplot(aes(highered_adj, studentloan_adj))+
+  geom_point()+
+  geom_smooth(method=lm)+
+  scale_y_continuous(labels = scales::dollar_format())+
+  scale_x_continuous(labels = scales::dollar_format())+
+   theme_minimal()+
+    theme_xaringan(background_color = "#FFFFFF") +
+  theme(plot.title.position = "plot",
+        plot.title = element_text(size=20,
+                                  face="bold"),
+        plot.subtitle = element_text(size=15),
+        plot.caption = element_text(size=10),
+        axis.title.x = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10),
+          axis.title.y = element_text(size = 10))+
+  labs(title = "There is a positive relationship between per capita \nstudent loan debt and higher education spending",
+       subtitle = "$2019",
+       caption = "Data: U.S. Census Bureau, Annual Survey of State and Local Government Finances\n Compiled by the Urban-Brookings Tax Policy Center;\n Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit",
+       x = "State Spending Per Capita on Higher Ed",
+       y = "Per Capita Student Loans")
+
+```
+
+
 
 ---
 
